@@ -15,3 +15,14 @@ Planning discussion Sept 17
 * Maybe even docker to not pollute the users
 * Use local repos and explain the decentralized fetch workflow before showing github
 * Perhaps attach a temperature sensor or some other simple hardware to HPC2
+* Project Euler for starting tasks
+* Python intro:
+  + Can probably borrow from [Michael's course](https://gitlab.com/michaelwimmer/trieste-kwant-course)
+  + Simple crypto for the same thing?
+  + Some web stuff with an API? (arxiv, twitter, email)
+  + Maybe more require
+* Shell/Git:
+  + Probably use Software Carpentry
+* Program advanced:
+  + Tests
+  + modules
