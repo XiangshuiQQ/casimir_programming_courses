@@ -1,0 +1,96 @@
+from abstracthandler import AbstractHandler
+import random
+import traceback
+import sys
+import time
+
+__author__ = 'damazter'
+
+
+class DummyHandler(AbstractHandler):
+    def __init__(self):
+        self.commandcount = 0
+        self.resistor = 10
+        self.current = 1
+        self.state = 1
+
+    def handle(self, data):
+        try:
+            if data.startswith('READ:'):
+                self.commandcount += 1
+                return self.readhandler(data[5:])
+            elif data.startswith('SET:'):
+                self.commandcount += 1
+                return self.sethandler(data[4:])
+            elif data.startswith('C3PO:'):
+                return self.c3pohandler(data[5:])
+        except:
+            print "Houston, We have a problem!!!"
+            print data
+            traceback.print_exc(file=sys.stdout)
+            # todo shout!!!
+        return "ERR:CMD?"
+
+    def readhandler(self, command):
+        if self.state == 0:
+            time.sleep(20)
+            return None
+        if random.random() > 0.95:
+            return "ERR:BUSY"
+        elif command.startswith('VOL'):
+            return "STAT:VOL:"+str(self.current * self.resistor*(0.8+0.4*random.random()))+"V"
+        elif command.startswith('RES'):
+            return "STAT:RES:"+str(self.resistor)+"Ohm"
+        elif command.startswith('CUR'):
+            return "STAT:CUR:"+str(self.current)+"A"
+        return "ERR:CMD?"
+
+    def sethandler(self, command):
+        if self.state == 0:
+            time.sleep(20)
+            return None
+
+        if random.random() > 0.95:
+            return "ERR:BUSY"
+        elif command.startswith("RES"):
+            res = ''.join([c for c in command if c in '1234567890.'])
+            r = float(res)
+            for ref in [1, 10, 100, 1000]:
+                if ref == r:
+                    self.resistor = ref
+                    return "STAT:RES:"+str(res)+"Ohm"
+            return "ERR:RES?"
+        elif command.startswith("CUR"):
+            cur = ''.join([c for c in command if c in '1234567890.'])
+            try:
+                i = float(cur)
+                if abs(i) > 1:
+                    return "ERR:RNG?"
+                else:
+                    self.current = i
+                    return "STAT:CUR:" + str(i)+"A"
+            except:
+                return "ERR:VAL?"
+
+        return "ERR:CMD?"
+
+    def c3pohandler(self, command):
+        if command.startswith('COMMANDCOUNTER'):
+            return str(self.commandcounter)
+        elif command.startswith('CRASH'):
+            self.state = 0
+            return 'done'
+        elif command.startswith('RESET'):
+            self.state = 1
+            return 'done'
+        elif command.startswith("RES"):
+            res = ''.join([c for c in command if c in '1234567890.'])
+            r = float(res)
+            self.resistor = r
+            return "STAT:RES:"+str(r)+"Ohm"
+
+    def getdweet(self):
+        return None
+
+    def shutdown(self):
+        pass
