@@ -1,26 +1,26 @@
-Monday:
-- basic python
+Monday: (Michael)
+- basic python 
 
 Tuesday:
-- Shell
+- Shell (Jos)
     - file system operations (ls, cd, pwd, mkdir, example for power user)  
-- libraries
+- libraries (Joe)
     - scipy, numpy, pip 
     - finding libraries
     - what is an API (mention that it is possible to interface don't use) 
 
-Wednesday:
+Wednesday: (Adriaan) 
 - Basics of git (local operations)
     - single user workflow 
     - incorporating version control in workflow 
 - git with remote repositories
     - two users single branch + conflict resolution 
 
-Thusday:
+Thusday: (Anton) 
 - Top down approach python
 - project
 
-Friday:
+Friday: (Damaz) 
 - Driver
 - Continuation of projects
 
