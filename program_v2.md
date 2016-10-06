@@ -16,4 +16,3 @@ Thusday:
 Friday:
 - Driver
 - Continuation of projects
-- 
