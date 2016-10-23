@@ -16,6 +16,7 @@ class Instrument:
         self.state = 1
 
     def packet_handler(self, msg):
+        msg = msg.upper()
         r = ""
         try:
             if msg.startswith('READ:'):
