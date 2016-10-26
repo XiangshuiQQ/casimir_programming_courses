@@ -155,8 +155,15 @@ class Instrument:
         combined_psi = qutip.tensor(states)
         return combined_psi
 
+    def get_z_basis_msmst_probs(self, rho):
+        p = []
+        for i in product([0, 1], repeat=self.nqubits):
+            psi_n = self.get_state(i)
+            p.append((psi_n.dag() * rho * psi_n).norm())
+        return p
+
     def measure_z_basis(self, rho):
-        probs = get_z_basis_msmst_probs(rho)
+        probs = self.get_z_basis_msmst_probs(rho)
         random_float = np.random.rand()
         c_probs = np.cumsum(probs)
         msmt_outcomes = list(product([0, 1], repeat=len(c_probs)))
