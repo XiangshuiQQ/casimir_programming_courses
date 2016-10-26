@@ -11,7 +11,7 @@ __author__ = 'damazdejong'
 class Instrument:
     def __init__(self, **kwargs):
         self.commandcounter = 0
-        self.resistor = 3.1415926535
+        self.resistor = 50
         self.current = 1
         self.state = 1
 
