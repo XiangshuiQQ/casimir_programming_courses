@@ -41,7 +41,8 @@ class Instrument:
         if command.startswith('X') or command.startswith('Y'):
             return self.single_qubit_operation(command)
         elif command.startswith('ZERO'):
-            return self.reset()
+            self.reset()
+            return "STAT:RES:OK"
         elif command.startswith('NOP'):
             self.decohere()
             return "STAT:OP:OK"
@@ -95,11 +96,14 @@ class Instrument:
                 raise Exception
         except Exception:
             return "ERR:ARGS?"
-        cnot = qutip.qip.cnot(N=self.nqubits, control=n, target=m)
-        self.rho = cnot * self.rho * cnot.dag()
-        print(command, str(n), str(m))
-        self.decohere()
-        return "ERR:NI"
+        try:
+            cnot = qutip.qip.cnot(N=self.nqubits, control=n, target=m)
+            self.rho = cnot * self.rho * cnot.dag()
+            print(command, str(n), str(m))
+            self.decohere()
+        except:
+            return "ERR:NOTCNOT"
+        return "STAT:OP:OK"
 
     def decohere(self):
         if self.state == 'EXPERIMENT':
@@ -130,8 +134,15 @@ class Instrument:
             return "STAT:THEORY"
         elif command.startswith("COUNTER"):
             return "STAT:CC:"+str(self.commandcounter)
-        elif command.startswith('measure'):
+        elif command.startswith('MEASURE'):
             return self.measure(debug=True)
+        elif command.startswith('SET'):
+            try:
+                self.nqubits = int(command.split(":")[1])
+                self.reset()
+            except:
+                return "ERR:SET"
+            return "STAT:N:"+str(self.nqubits)
         return "ERR:DEBUG:CMD?"
 
     def parse_qubit(self, name):
@@ -166,7 +177,7 @@ class Instrument:
         probs = self.get_z_basis_msmst_probs(rho)
         random_float = np.random.rand()
         c_probs = np.cumsum(probs)
-        msmt_outcomes = list(product([0, 1], repeat=len(c_probs)))
+        msmt_outcomes = list(product([0, 1], repeat=self.nqubits))
         for i, cp in enumerate(c_probs):
             if cp > random_float:
                 return msmt_outcomes[i]
