@@ -13,73 +13,96 @@ class Instrument:
         self.commandcounter = 0
         self.resistor = 50
         self.current = 1
-        self.state = 1
+        self.state = 'THEORY'
 
     def packet_handler(self, msg):
         msg = msg.upper()
         r = ""
         try:
-            if msg.startswith('READ:'):
+            if msg.startswith('OP:'):
                 self.commandcounter += 1
-                r = self.readhandler(msg[5:])
-            elif msg.startswith('SET:'):
+                r = self.ophandler(msg[3:])
+            elif msg.startswith('DEBUG:'):
                 self.commandcounter += 1
-                r = self.sethandler(msg[4:])
+                r = self.debughandler(msg[6:])
             else:
                 r = "ERR:CMD?"
         except:
-            print("Houston, We have a problem!!!")
+            print("Unintended error occurred")
             print(msg)
             traceback.print_exc(file=sys.stdout)
             r = None
-            # todo shout!!!
         return r
 
-    def readhandler(self, command):
-        if self.state == 0:
-            #time.sleep(20)
-            return None
-        time.sleep(0.01)
-        if random.random() > 0.95:
-            return "ERR:BUSY"
-        elif command.startswith('VOL'):
-            return "STAT:VOL:" + str(self.current * self.resistor * (
-            0.8 + 0.4 * random.random())) + "V"
-        elif command.startswith('RES'):
-            return "STAT:RES:" + str(self.resistor) + "Ohm"
-        elif command.startswith('CUR'):
-            return "STAT:CUR:" + str(self.current) + "A"
-        return "ERR:CMD?"
+    def ophandler(self, command):
+        if command.startswith('X') or command.startswith('Y'):
+            return self.single_qubit_operation(command)
+        elif command.startswith('ZERO'):
+            return self.single_qubit_operation(command)
+        elif command.startswith('NOP'):
+            self.decohere()
+            return "STAT:OP:OK"
+        elif command.startswith('CNOT'):
+            return self.cnot(command)
+        return "ERR:OP:CMD?"
 
-    def sethandler(self, command):
-        if self.state == 0:
-            #time.sleep(20)
-            return None
-        time.sleep(0.01)
-        time.sleep(0.01)
-        if random.random() > 0.95:
-            return "ERR:BUSY"
-        elif command.startswith("RES"):
-            res = ''.join([c for c in command if c in '1234567890.'])
-            r = float(res)
-            for ref in [1, 10, 100, 1000]:
-                if ref == r:
-                    self.resistor = ref
-                    return "STAT:RES:" + str(res) + "Ohm"
-            return "ERR:RES?"
-        elif command.startswith("CUR"):
-            cur = ''.join([c for c in command if c in '-1234567890.'])
-            try:
-                i = float(cur)
-                if abs(i) > 1:
-                    return "ERR:RNG?"
-                else:
-                    self.current = i
-                    return "STAT:CUR:" + str(i) + "A"
-            except:
-                return "ERR:VAL?"
+    def single_qubit_operation(self, command):
+        try:
+            spl = command.split(":")
+            if len(spl) > 2:
+                raise Exception()
+            n = self.parse_qubit(spl[1])
+        except Exception:
+            return "ERR:ARGS?"
+        print(command, str(n))
+        if command.startswith("X90"):
+            return "ERR:NI"
+        elif command.startswith("Y90"):
+            return "ERR:NI"
+        elif command.startswith("X45"):
+            return "ERR:NI"
+        elif command.startswith("Y45"):
+            return "ERR:NI"
+        elif command.startswith("ZERO"):
+            return "ERR:NI"
+        else:
+            return "ERR:OP:CMD?"
+        self.decohere()
+        return "STAT:OP:OK"
 
-        return "ERR:CMD?"
+    def cnot(self, command):
+        try:
+            spl = command.split(":")
+            if len(spl) > 3:
+                raise Exception()
+            n = self.parse_qubit(spl[1])
+            m = self.parse_qubit(spl[2])
+        except Exception:
+            return "ERR:ARGS?"
+        print(command, str(n), str(m))
+        self.decohere()
+        return "ERR:NI"
+
+    def decohere(self):
+        if self.state == 'EXPERIMENT':
+            print('NOT IMPLEMENTED')
+
+    def debughandler(self, command):
+        if command.startswith("RHO"):
+            return "ERR:NI"
+        elif command.startswith("EXP"):
+            return "ERR:NI"
+            self.state = 'EXPERIMENT'
+            return "STAT:EXPERIMENT"
+        elif command.startswith("TH"):
+            self.state = 'THEORY'
+            return "STAT:THEORY"
+        elif command.startswith("COUNTER"):
+            return "STAT:CC:"+str(self.commandcounter)
+        return "ERR:DEBUG:CMD?"
+
+    def parse_qubit(self, name):
+        return int(name[1:])
 
 
 instrument = Instrument()
