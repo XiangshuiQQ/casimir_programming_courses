@@ -195,7 +195,7 @@ class Server(socketserver.BaseRequestHandler):
         # otherwise don't respond -- let the client hang
 
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 5000
+    HOST, PORT = "localhost", 5001
 
     # Create the server, binding to localhost on port 5000
     server = socketserver.TCPServer((HOST, PORT), Server, bind_and_activate=False)
