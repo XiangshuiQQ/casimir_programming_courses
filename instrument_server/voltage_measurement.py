@@ -12,7 +12,7 @@ class Instrument:
     def __init__(self, **kwargs):
         self.commandcounter = 0
         self.resistor = 50
-        self.current = 1
+        self.current = 0
         self.state = 1
 
     def packet_handler(self, msg):
@@ -94,7 +94,7 @@ class Server(socketserver.BaseRequestHandler):
         # otherwise don't respond -- let the client hang
 
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 5000
+    HOST, PORT = "0.0.0.0", 5000
 
     # Create the server, binding to localhost on port 5000
     server = socketserver.TCPServer((HOST, PORT), Server, bind_and_activate=False)
