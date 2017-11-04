@@ -1,0 +1,15 @@
+<style>
+
+.rendered_html pre code {
+    background-color: transparent;
+}
+
+.rendered_html pre {
+    background-color: #eee;
+    color: #6e5494
+    border-color: #dFb5b4;
+    border-left: 5px solid #6e5494;
+    padding: 0.5em;
+    }
+
+</style>
