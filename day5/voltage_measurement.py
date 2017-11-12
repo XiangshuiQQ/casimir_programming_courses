@@ -27,6 +27,9 @@ class Instrument:
                 msg = msg.split(':', 1)[-1]
                 self.commandcounter += 1
                 r = self.sourcehandler(msg)
+            elif msg.startswith('CURR'):  # SOURCE is optional
+                msg = 'SOUR:'+msg
+                return self.packet_handler(msg)
             elif msg.startswith('READ?'):
                 return self.packet_handler('SENS:DATA?')
             elif msg.startswith('MEAS') and '?' in msg:
@@ -68,7 +71,10 @@ class Instrument:
         if not msg.startswith('CURR'):
             return "ERR:SOUR?"
 
-        msg = msg.split(':', 1)[-1]
+        if ':' not in msg:
+            msg = 'LEV' + msg
+        else:
+            msg = msg.split(':', 1)[-1]
         time.sleep(0.01)
         time.sleep(0.01)
 
