@@ -19,12 +19,23 @@ class Instrument:
         msg = msg.upper()
         r = ""
         try:
-            if msg.startswith('READ:'):
+            if msg.startswith('SENS'):
                 self.commandcounter += 1
-                r = self.readhandler(msg[5:])
-            elif msg.startswith('SET:'):
+                msg = msg.split(':', 1)[-1]
+                r = self.sensehandler(msg)
+            elif msg.startswith('SOUR'):
+                msg = msg.split(':', 1)[-1]
                 self.commandcounter += 1
-                r = self.sethandler(msg[4:])
+                r = self.sourcehandler(msg)
+            elif msg.startswith('CURR'):  # SOURCE is optional
+                msg = 'SOUR:'+msg
+                return self.packet_handler(msg)
+            elif msg.startswith('READ?'):
+                return self.packet_handler('SENS:DATA?')
+            elif msg.startswith('MEAS') and '?' in msg:
+                return self.packet_handler('SENS:DATA?')
+            elif msg.startswith('FETC') and '?' in msg:
+                return self.packet_handler('SENS:DATA?')
             else:
                 r = "ERR:CMD?"
         except:
@@ -35,50 +46,68 @@ class Instrument:
             # todo shout!!!
         return r
 
-    def readhandler(self, command):
+    def sensehandler(self, command):
         if self.state == 0:
             #time.sleep(20)
             return None
         time.sleep(0.01)
         if random.random() > 0.95:
             return "ERR:BUSY"
-        elif command.startswith('VOL'):
-            return "STAT:VOL:" + str(self.current * self.resistor * (
+        elif command.startswith('DATA') and '?' in command:
+            return "SENS:DATA " + str(self.current * self.resistor * (
             0.8 + 0.4 * random.random())) + "V"
         elif command.startswith('RES'):
-            return "STAT:RES:" + str(self.resistor) + "Ohm"
-        elif command.startswith('CUR'):
-            return "STAT:CUR:" + str(self.current) + "A"
+            return "STAT:RES " + str(self.resistor) + "Ohm"
+        #elif command.startswith('CUR'):
+        #    return "STAT:CUR:" + str(self.current) + "A"
         return "ERR:CMD?"
 
-    def sethandler(self, command):
+    def sourcehandler(self, msg):
         if self.state == 0:
             #time.sleep(20)
             return None
-        time.sleep(0.01)
-        time.sleep(0.01)
         if random.random() > 0.95:
             return "ERR:BUSY"
-        elif command.startswith("RES"):
-            res = ''.join([c for c in command if c in '1234567890.'])
-            r = float(res)
-            for ref in [1, 10, 100, 1000]:
-                if ref == r:
-                    self.resistor = ref
-                    return "STAT:RES:" + str(res) + "Ohm"
-            return "ERR:RES?"
-        elif command.startswith("CUR"):
-            cur = ''.join([c for c in command if c in '-1234567890.'])
+        if not msg.startswith('CURR'):
+            return "ERR:SOUR?"
+
+        if ':' not in msg:
+            msg = 'LEV' + msg
+        else:
+            msg = msg.split(':', 1)[-1]
+        time.sleep(0.01)
+        time.sleep(0.01)
+
+        if msg.startswith('MODE'):
+            if '?' in msg:
+                return 'SOUR:CURR:MODE:FIX'
+            else:
+                msg = msg.split(':', 1)[-1]
+                if msg.startswith('FIX'):
+                    return 'SOUR:CURR:MODE:FIX'
+                else:
+                    return "ERR:MODE?"
+        elif msg.startswith('LEV'):
+            if '?' in msg:
+                return 'SOUR:CURR:LEV ' + str(self.current) + "A"
+            cur = ''.join([c for c in msg if c in '-1234567890.'])
             try:
                 i = float(cur)
                 if abs(i) > 1:
                     return "ERR:RNG?"
                 else:
                     self.current = i
-                    return "STAT:CUR:" + str(i) + "A"
+                    return 'SOUR:CURR:LEV ' + str(i) + "A"
             except:
                 return "ERR:VAL?"
-
+        elif msg.startswith("RES"):
+            res = ''.join([c for c in msg if c in '1234567890.'])
+            r = float(res)
+            for ref in [1, 10, 100, 1000]:
+                if ref == r:
+                    self.resistor = ref
+                    return "STAT:RES " + str(res) + "Ohm"
+            return "ERR:RES?"
         return "ERR:CMD?"
 
 
